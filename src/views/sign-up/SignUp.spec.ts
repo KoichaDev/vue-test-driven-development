@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/vue';
+import userEvent from '@testing-library/user-event';
 
 import SignUp from './SignUp.vue';
 
@@ -58,7 +59,7 @@ describe('sign up', () => {
 
       const nodePasswordInputType = screen.getByLabelText('Password Repeat');
 
-      expect(nodePasswordInputType).toHaveAttribute('type', 'password');
+      expect(nodePasswordInputType).toHaveAttribute('type', 'password-repeat');
     });
   });
 
@@ -74,9 +75,26 @@ describe('sign up', () => {
     it('disables the button initially', () => {
       render(SignUp);
 
-      const nodeButtonDisabled = screen.getByRole('button', { name: 'Sign up' });
+      const nodeSubmitButtonDisabled = screen.getByRole('button', { name: 'Sign up' });
 
-      expect(nodeButtonDisabled).toBeDisabled();
+      expect(nodeSubmitButtonDisabled).toBeDisabled();
+    });
+  });
+
+  describe('when user sets same value for password inputs', () => {
+    it('enables button', async () => {
+      const user = userEvent.setup();
+      render(SignUp);
+
+      const passwordInputField = screen.getByLabelText('Password');
+      const repeatedPasswordInputField = screen.getByLabelText('Password Repeat');
+
+      await user.type(passwordInputField, 'dummy-password');
+      await user.type(repeatedPasswordInputField, 'dummy-password');
+
+      const nodeSubmitButton = screen.getByRole('button', { name: 'Sign up' });
+
+      expect(nodeSubmitButton).toBeEnabled();
     });
   });
 });
