@@ -64,6 +64,9 @@ devDependencies:
   eslint:
     specifier: ^8.49.0
     version: 8.56.0
+  eslint-plugin-vitest-globals:
+    specifier: ^1.4.0
+    version: 1.4.0
   eslint-plugin-vue:
     specifier: ^9.17.0
     version: 9.21.1(eslint@8.56.0)
@@ -1793,6 +1796,10 @@ packages:
       prettier: 3.2.5
       prettier-linter-helpers: 1.0.0
       synckit: 0.8.8
+    dev: true
+
+  /eslint-plugin-vitest-globals@1.4.0:
+    resolution: {integrity: sha512-WE+YlK9X9s4vf5EaYRU0Scw7WItDZStm+PapFSYlg2ABNtaQ4zIG7wEqpoUB3SlfM+SgkhgmzR0TeJOO5k3/Nw==}
     dev: true
 
   /eslint-plugin-vue@9.21.1(eslint@8.56.0):
