@@ -1,11 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
-import axios from 'axios';
+// import axios from 'axios';
 
 import SignUp from './SignUp.vue';
 
-vi.mock('axios');
+// vi.mock('axios');
+
+const mockFetch = vi.fn();
+global.fetch = mockFetch;
 
 describe('sign up', () => {
   it('has sign up header', () => {
@@ -120,11 +123,23 @@ describe('sign up', () => {
 
       await user.click(nodeSubmitButton);
 
-      expect(axios.post).toHaveBeenCalledWith('/api/v1/users', {
-        username: 'user1',
-        email: 'user1@mail.com',
-        password: 'fake-password'
+      expect(mockFetch).toHaveBeenCalledWith('/api/v1/users', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json'
+        },
+        body: JSON.stringify({
+          username: 'user1',
+          email: 'user1@mail.com',
+          password: 'fake-password'
+        })
       });
+
+      // expect(axios.post).toHaveBeenCalledWith('/api/v1/users', {
+      //   username: 'user1',
+      //   email: 'user1@mail.com',
+      //   password: 'fake-password'
+      // });
     });
   });
 });

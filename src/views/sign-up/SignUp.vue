@@ -22,7 +22,15 @@ function handleSubmitButton(e: Event) {
 
   const { repeatedPassword: _, ...restFormFields } = signupForm;
 
-  axios.post('/api/v1/users', { ...restFormFields });
+  // axios.post('/api/v1/users', { ...restFormFields });
+
+  fetch('/api/v1/users', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json'
+    },
+    body: JSON.stringify(restFormFields)
+  });
 }
 </script>
 
