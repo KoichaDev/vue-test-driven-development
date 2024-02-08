@@ -1,34 +1,28 @@
 <script setup lang="ts">
 import { reactive, computed } from 'vue';
+import axios from 'axios';
+
 import { isNotValidPassword, type ValidPassword } from './helpers/isValidForm';
 
 const signupForm = reactive({
   username: '',
   email: '',
-  passwordField: '',
-  repeatedPasswordField: ''
+  password: '',
+  repeatedPassword: ''
 });
 
 const isButtonDisabled = computed(() => {
-  const { passwordField, repeatedPasswordField } = signupForm;
+  const { password, repeatedPassword } = signupForm;
 
-  return isNotValidPassword(passwordField as ValidPassword, repeatedPasswordField as ValidPassword);
+  return isNotValidPassword(password as ValidPassword, repeatedPassword as ValidPassword);
 });
 
-function handleChangeUsername(e: Event) {
-  signupForm.username = (e.target as HTMLInputElement).value;
-}
+function handleSubmitButton(e: Event) {
+  e.preventDefault();
 
-function handleChangeEmail(e: Event) {
-  signupForm.email = (e.target as HTMLInputElement).value;
-}
+  const { repeatedPassword: _, ...restFormFields } = signupForm;
 
-function handleChangePassword(e: Event) {
-  signupForm.passwordField = (e.target as HTMLInputElement).value;
-}
-
-function handleChangePasswordRepeat(e: Event) {
-  signupForm.repeatedPasswordField = (e.target as HTMLInputElement).value;
+  axios.post('/api/v1/users', { ...restFormFields });
 }
 </script>
 
@@ -37,25 +31,25 @@ function handleChangePasswordRepeat(e: Event) {
 
   <div>
     <label for="username">Username</label>
-    <input type="text" id="username" @input="handleChangeUsername" />
+    <input type="text" id="username" v-model="signupForm.username" />
   </div>
 
   <div>
     <label for="email">E-mail</label>
-    <input type="text" id="email" @input="handleChangeEmail" />
+    <input type="text" id="email" v-model="signupForm.email" />
   </div>
 
   <div>
     <label for="password">Password</label>
-    <input type="password" id="password" v-model="signupForm.passwordField" />
+    <input type="password" id="password" v-model="signupForm.password" />
   </div>
 
   <div>
     <label for="password-repeat">Password Repeat</label>
-    <input type="password" id="password-repeat" v-model="signupForm.repeatedPasswordField" />
+    <input type="password" id="password-repeat" v-model="signupForm.repeatedPassword" />
   </div>
 
-  <button :disabled="isButtonDisabled">Sign up</button>
+  <button @click="handleSubmitButton" :disabled="isButtonDisabled">Sign up</button>
 </template>
 
 <style></style>
