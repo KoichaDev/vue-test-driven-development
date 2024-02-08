@@ -1,14 +1,10 @@
-import { describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/vue';
+import { describe, expect, it } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
-// import axios from 'axios';
+import { HttpResponse, http, type DefaultBodyType } from 'msw';
+import { setupServer } from 'msw/node';
 
 import SignUp from './SignUp.vue';
-
-// vi.mock('axios');
-
-const mockFetch = vi.fn();
-global.fetch = mockFetch;
 
 describe('sign up', () => {
   it('has sign up header', () => {
@@ -106,6 +102,17 @@ describe('sign up', () => {
 
   describe('when user submits form', () => {
     it('sends username, email and password to the back-end', async () => {
+      let requestBody: DefaultBodyType = {};
+      const server = setupServer(
+        http.post('api/v1/users', async ({ request }) => {
+          requestBody = await request.json();
+
+          return HttpResponse.json({});
+        })
+      );
+
+      server.listen();
+
       const user = userEvent.setup();
       render(SignUp);
 
@@ -122,24 +129,13 @@ describe('sign up', () => {
       const nodeSubmitButton = screen.getByRole('button', { name: 'Sign up' });
 
       await user.click(nodeSubmitButton);
-
-      expect(mockFetch).toHaveBeenCalledWith('/api/v1/users', {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json'
-        },
-        body: JSON.stringify({
+      await waitFor(() => {
+        expect(requestBody).toEqual({
           username: 'user1',
           email: 'user1@mail.com',
           password: 'fake-password'
-        })
+        });
       });
-
-      // expect(axios.post).toHaveBeenCalledWith('/api/v1/users', {
-      //   username: 'user1',
-      //   email: 'user1@mail.com',
-      //   password: 'fake-password'
-      // });
     });
   });
 });

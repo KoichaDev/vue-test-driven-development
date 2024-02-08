@@ -17,20 +17,10 @@ const isButtonDisabled = computed(() => {
   return isNotValidPassword(password as ValidPassword, repeatedPassword as ValidPassword);
 });
 
-function handleSubmitButton(e: Event) {
-  e.preventDefault();
-
+function handleSubmitButton() {
   const { repeatedPassword: _, ...restFormFields } = signupForm;
 
-  // axios.post('/api/v1/users', { ...restFormFields });
-
-  fetch('/api/v1/users', {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json'
-    },
-    body: JSON.stringify(restFormFields)
-  });
+  axios.post('/api/v1/users', { ...restFormFields });
 }
 </script>
 
