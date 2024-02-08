@@ -59,7 +59,7 @@ describe('sign up', () => {
 
       const nodePasswordInputType = screen.getByLabelText('Password Repeat');
 
-      expect(nodePasswordInputType).toHaveAttribute('type', 'password-repeat');
+      expect(nodePasswordInputType).toHaveAttribute('type', 'password');
     });
   });
 
