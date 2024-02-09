@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse, http, type DefaultBodyType } from 'msw';
@@ -6,7 +6,30 @@ import { setupServer } from 'msw/node';
 
 import SignUp from './SignUp.vue';
 
-async function setup() {
+let counter = 0;
+
+let requestBody: DefaultBodyType = {};
+const server = setupServer(
+  http.post('api/v1/users', async ({ request }) => {
+    requestBody = await request.json();
+    counter += 1;
+    return HttpResponse.json({});
+  })
+);
+
+// ! Counter is increasing, because we are using same server above with other tests
+// ! Solution is just reset the value to 0 each time the server is doing multiple requests being handled.
+beforeEach(() => {
+  counter = 0;
+});
+
+beforeAll(() => server.listen());
+
+afterAll(() => server.listen());
+
+server.listen();
+
+async function mockSignUpFormSetup() {
   const user = userEvent.setup();
   const renderResult = render(SignUp);
 
@@ -113,7 +136,7 @@ describe('sign up', () => {
       const {
         user,
         element: { button }
-      } = await setup();
+      } = await mockSignUpFormSetup();
 
       const passwordInputField = screen.getByLabelText('Password');
       const repeatedPasswordInputField = screen.getByLabelText('Password Repeat');
@@ -127,21 +150,10 @@ describe('sign up', () => {
 
   describe('when user submits form', () => {
     it('sends username, email and password to the back-end', async () => {
-      let requestBody: DefaultBodyType = {};
-      const server = setupServer(
-        http.post('api/v1/users', async ({ request }) => {
-          requestBody = await request.json();
-
-          return HttpResponse.json({});
-        })
-      );
-
-      server.listen();
-
       const {
         user,
         element: { button }
-      } = await setup();
+      } = await mockSignUpFormSetup();
 
       await user.click(button);
       await waitFor(() => {
@@ -151,27 +163,14 @@ describe('sign up', () => {
           password: 'fake-password'
         });
       });
-
-      server.close();
     });
 
     describe('when there is an ongoing API call', () => {
       it('does not allow clicking the button', async () => {
-        let counter = 0;
-
-        const server = setupServer(
-          http.post('api/v1/users', () => {
-            counter += 1;
-            return HttpResponse.json({});
-          })
-        );
-
-        server.listen();
-
         const {
           user,
           element: { button }
-        } = await setup();
+        } = await mockSignUpFormSetup();
 
         await user.click(button);
         await user.click(button);
@@ -179,8 +178,6 @@ describe('sign up', () => {
         await waitFor(() => {
           expect(counter).toBe(1);
         });
-
-        server.close();
       });
     });
   });
