@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, computed } from 'vue';
+import { reactive, computed, ref } from 'vue';
 import axios from 'axios';
 
 import { isNotValidPassword, type ValidPassword } from './helpers/isValidForm';
@@ -11,6 +11,8 @@ const signupForm = reactive({
   repeatedPassword: ''
 });
 
+const apiInProgress = ref(false);
+
 const isButtonDisabled = computed(() => {
   const { password, repeatedPassword } = signupForm;
 
@@ -19,14 +21,12 @@ const isButtonDisabled = computed(() => {
 
 function handleSubmitButton() {
   const { repeatedPassword: _, ...restFormFields } = signupForm;
-
+  apiInProgress.value = true;
   axios.post('/api/v1/users', { ...restFormFields });
 }
 </script>
 
 <template>
-
-
   <div class="col-lg-6 offset-lg-3 col-md-8 offset-md-2">
     <h1>Sign Up</h1>
     <form class="card" @submit.prevent="handleSubmitButton">
@@ -53,7 +53,9 @@ function handleSubmitButton() {
           />
         </div>
         <div class="text-center">
-          <button class="btn btn-primary" :disabled="isButtonDisabled">Sign up</button>
+          <button class="btn btn-primary" :disabled="isButtonDisabled || apiInProgress">
+            Sign up
+          </button>
         </div>
       </div>
     </form>
