@@ -246,6 +246,28 @@ describe('sign up', () => {
           expect(form).not.toBeInTheDocument();
         });
       });
+
+      describe('when network failure occurs', () => {
+        it('displays generic message', async () => {
+          server.use(
+            http.post('api/v1/users', () => {
+              return HttpResponse.error();
+            })
+          );
+
+          const {
+            user,
+            element: { button }
+          } = await mockSignUpFormSetup();
+
+          await user.click(button);
+
+          const responseErrorText = await screen.findByText(
+            'Unexpected error occured. Please try again!'
+          );
+          expect(responseErrorText).toBeInTheDocument();
+        });
+      });
     });
   });
 });

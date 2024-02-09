@@ -13,6 +13,7 @@ const signupForm = reactive({
 
 const apiInProgress = ref(false);
 const successMessage = ref('');
+const errorMessage = ref('');
 
 const isButtonDisabled = computed(() => {
   const { password, repeatedPassword } = signupForm;
@@ -23,16 +24,26 @@ const isButtonDisabled = computed(() => {
 async function handleSubmitButton() {
   const { repeatedPassword: _, ...restFormFields } = signupForm;
   apiInProgress.value = true;
-  const response = await axios.post('/api/v1/users', { ...restFormFields });
 
-  successMessage.value = response.data.message;
+  try {
+    const response = await axios.post('/api/v1/users', { ...restFormFields });
+
+    successMessage.value = response.data.message;
+  } catch {
+    errorMessage.value = 'Unexpected error occured. Please try again!';
+  }
 }
 </script>
 
 <template>
   <div class="col-lg-6 offset-lg-3 col-md-8 offset-md-2">
     <h1>Sign Up</h1>
-    <form v-if="!successMessage" class="card" data-testid="form-sign-up" @submit.prevent="handleSubmitButton">
+    <form
+      v-if="!successMessage"
+      class="card"
+      data-testid="form-sign-up"
+      @submit.prevent="handleSubmitButton"
+    >
       <div class="card-body">
         <div class="mb-3">
           <label class="form-label" for="username">Username</label>
@@ -55,6 +66,8 @@ async function handleSubmitButton() {
             v-model="signupForm.repeatedPassword"
           />
         </div>
+
+        <div v-if="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
         <div class="text-center">
           <button class="btn btn-primary" :disabled="isButtonDisabled || apiInProgress">
             <span v-if="apiInProgress" role="status" class="spinner-border spinner-border-sm">
