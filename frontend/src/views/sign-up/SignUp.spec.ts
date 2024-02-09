@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
-import { HttpResponse, http, type DefaultBodyType } from 'msw';
+import { HttpResponse, delay, http, type DefaultBodyType } from 'msw';
 import { setupServer } from 'msw/node';
 
 import SignUp from './SignUp.vue';
@@ -13,16 +13,22 @@ const server = setupServer(
   http.post('api/v1/users', async ({ request }) => {
     requestBody = await request.json();
     counter += 1;
+
+    await delay();
     return HttpResponse.json({
       message: 'User create success'
     });
   })
 );
 
-// ! Counter is increasing, because we are using same server above with other tests
-// ! Solution is just reset the value to 0 each time the server is doing multiple requests being handled.
 beforeEach(() => {
+  // ! Counter is increasing, because we are using same server above with other tests
+  // ! Solution is just reset the value to 0 each time the server is doing multiple requests being handled.
+
   counter = 0;
+
+  // ! Resetting the server for each test, because we are overwriting the test display spinner icon from above
+  server.resetHandlers();
 });
 
 beforeAll(() => server.listen());
@@ -183,6 +189,14 @@ describe('sign up', () => {
       });
 
       it('display spinner icon', async () => {
+        server.use(
+          http.post('api/v1/users', async () => {
+            // server will never send a response back, so we can verify the spinner is there
+            await delay('infinite');
+            return HttpResponse.json({});
+          })
+        );
+
         const {
           user,
           element: { button }
@@ -215,6 +229,21 @@ describe('sign up', () => {
           const textResponse = await screen.findByText('User create success');
 
           expect(textResponse).toBeInTheDocument();
+        });
+      });
+
+      it('hides sign up form', async () => {
+        const {
+          user,
+          element: { button }
+        } = await mockSignUpFormSetup();
+
+        const form = screen.getByTestId('form-sign-up');
+
+        await user.click(button);
+
+        await waitFor(() => {
+          expect(form).not.toBeInTheDocument();
         });
       });
     });

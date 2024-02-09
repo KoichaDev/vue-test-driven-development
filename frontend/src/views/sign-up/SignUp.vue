@@ -32,7 +32,7 @@ async function handleSubmitButton() {
 <template>
   <div class="col-lg-6 offset-lg-3 col-md-8 offset-md-2">
     <h1>Sign Up</h1>
-    <form class="card" @submit.prevent="handleSubmitButton">
+    <form v-if="!successMessage" class="card" data-testid="form-sign-up" @submit.prevent="handleSubmitButton">
       <div class="card-body">
         <div class="mb-3">
           <label class="form-label" for="username">Username</label>
