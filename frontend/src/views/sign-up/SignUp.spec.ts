@@ -6,6 +6,31 @@ import { setupServer } from 'msw/node';
 
 import SignUp from './SignUp.vue';
 
+async function setup() {
+  const user = userEvent.setup();
+  const renderResult = render(SignUp);
+
+  const usernameInputField = screen.getByLabelText('Username');
+  const emailInputField = screen.getByLabelText('E-mail');
+  const passwordInputField = screen.getByLabelText('Password');
+  const repeatedPasswordInputField = screen.getByLabelText('Password Repeat');
+
+  await user.type(usernameInputField, 'user1');
+  await user.type(emailInputField, 'user1@mail.com');
+  await user.type(passwordInputField, 'fake-password');
+  await user.type(repeatedPasswordInputField, 'fake-password');
+
+  const button = screen.getByRole('button', { name: 'Sign up' });
+
+  return {
+    ...renderResult,
+    user,
+    element: {
+      button
+    }
+  };
+}
+
 describe('sign up', () => {
   it('has sign up header', () => {
     render(SignUp);
@@ -85,8 +110,10 @@ describe('sign up', () => {
 
   describe('when user sets same value for password inputs', () => {
     it('enables button', async () => {
-      const user = userEvent.setup();
-      render(SignUp);
+      const {
+        user,
+        element: { button }
+      } = await setup();
 
       const passwordInputField = screen.getByLabelText('Password');
       const repeatedPasswordInputField = screen.getByLabelText('Password Repeat');
@@ -94,9 +121,7 @@ describe('sign up', () => {
       await user.type(passwordInputField, 'dummy-password');
       await user.type(repeatedPasswordInputField, 'dummy-password');
 
-      const nodeSubmitButton = screen.getByRole('button', { name: 'Sign up' });
-
-      expect(nodeSubmitButton).toBeEnabled();
+      expect(button).toBeEnabled();
     });
   });
 
@@ -113,22 +138,12 @@ describe('sign up', () => {
 
       server.listen();
 
-      const user = userEvent.setup();
-      render(SignUp);
+      const {
+        user,
+        element: { button }
+      } = await setup();
 
-      const usernameInputField = screen.getByLabelText('Username');
-      const emailInputField = screen.getByLabelText('E-mail');
-      const passwordInputField = screen.getByLabelText('Password');
-      const repeatedPasswordInputField = screen.getByLabelText('Password Repeat');
-
-      await user.type(usernameInputField, 'user1');
-      await user.type(emailInputField, 'user1@mail.com');
-      await user.type(passwordInputField, 'fake-password');
-      await user.type(repeatedPasswordInputField, 'fake-password');
-
-      const nodeSubmitButton = screen.getByRole('button', { name: 'Sign up' });
-
-      await user.click(nodeSubmitButton);
+      await user.click(button);
       await waitFor(() => {
         expect(requestBody).toEqual({
           username: 'user1',
@@ -153,23 +168,13 @@ describe('sign up', () => {
 
         server.listen();
 
-        const user = userEvent.setup();
-        render(SignUp);
+        const {
+          user,
+          element: { button }
+        } = await setup();
 
-        const usernameInputField = screen.getByLabelText('Username');
-        const emailInputField = screen.getByLabelText('E-mail');
-        const passwordInputField = screen.getByLabelText('Password');
-        const repeatedPasswordInputField = screen.getByLabelText('Password Repeat');
-
-        await user.type(usernameInputField, 'user1');
-        await user.type(emailInputField, 'user1@mail.com');
-        await user.type(passwordInputField, 'fake-password');
-        await user.type(repeatedPasswordInputField, 'fake-password');
-
-        const nodeSubmitButton = screen.getByRole('button', { name: 'Sign up' });
-
-        await user.click(nodeSubmitButton);
-        await user.click(nodeSubmitButton);
+        await user.click(button);
+        await user.click(button);
 
         await waitFor(() => {
           expect(counter).toBe(1);
