@@ -24,6 +24,7 @@ const isButtonDisabled = computed(() => {
 async function handleSubmitButton() {
   const { repeatedPassword: _, ...restFormFields } = signupForm;
   apiInProgress.value = true;
+  errorMessage.value = '';
 
   try {
     const response = await axios.post('/api/v1/users', { ...restFormFields });
@@ -31,6 +32,8 @@ async function handleSubmitButton() {
     successMessage.value = response.data.message;
   } catch {
     errorMessage.value = 'Unexpected error occured. Please try again!';
+  } finally {
+    apiInProgress.value = false;
   }
 }
 </script>

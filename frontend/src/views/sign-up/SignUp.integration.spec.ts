@@ -49,7 +49,7 @@ describe('when user sets same value for password inputs', () => {
         // ! this creates response immediately, so the spinner is not visible and will cause issue of our tests
         // ! mockedAxios.post.mockImplementation({data: {}})
         mockedAxios.post.mockImplementation(() => {
-          return new Promise((resolve, reject) => {
+          return new Promise((resolve) => {
             setTimeout(
               () =>
                 resolve({

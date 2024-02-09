@@ -268,6 +268,59 @@ describe('sign up', () => {
           expect(responseErrorText).toBeInTheDocument();
         });
       });
+
+      it('hides spinner icon from the button', async () => {
+        server.use(
+          http.post('api/v1/users', () => {
+            return HttpResponse.error();
+          })
+        );
+
+        const {
+          user,
+          element: { button }
+        } = await mockSignUpFormSetup();
+
+        await user.click(button);
+
+        await waitFor(() => {
+          const loadingSpinner = screen.queryByRole('status');
+
+          expect(loadingSpinner).not.toBeInTheDocument();
+        });
+      });
+    });
+
+    it('hides error when API request is progress', async () => {
+      let processFirstRequest = false;
+
+      server.use(
+        http.post('api/v1/users', () => {
+          if (!processFirstRequest) {
+            processFirstRequest = true;
+            return HttpResponse.error();
+          } else {
+            return HttpResponse.json({});
+          }
+        })
+      );
+
+      const {
+        user,
+        element: { button }
+      } = await mockSignUpFormSetup();
+
+      await user.click(button);
+
+      const responseErrorText = await screen.findByText(
+        'Unexpected error occured. Please try again!'
+      );
+
+      await user.click(button);
+
+      await waitFor(() => {
+        expect(responseErrorText).not.toBeInTheDocument();
+      });
     });
   });
 });
