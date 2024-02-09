@@ -136,6 +136,47 @@ describe('sign up', () => {
           password: 'fake-password'
         });
       });
+
+      server.close();
+    });
+
+    describe('when there is an ongoing API call', () => {
+      it('does not allow clicking the button', async () => {
+        let counter = 0;
+
+        const server = setupServer(
+          http.post('api/v1/users', () => {
+            counter += 1;
+            return HttpResponse.json({});
+          })
+        );
+
+        server.listen();
+
+        const user = userEvent.setup();
+        render(SignUp);
+
+        const usernameInputField = screen.getByLabelText('Username');
+        const emailInputField = screen.getByLabelText('E-mail');
+        const passwordInputField = screen.getByLabelText('Password');
+        const repeatedPasswordInputField = screen.getByLabelText('Password Repeat');
+
+        await user.type(usernameInputField, 'user1');
+        await user.type(emailInputField, 'user1@mail.com');
+        await user.type(passwordInputField, 'fake-password');
+        await user.type(repeatedPasswordInputField, 'fake-password');
+
+        const nodeSubmitButton = screen.getByRole('button', { name: 'Sign up' });
+
+        await user.click(nodeSubmitButton);
+        await user.click(nodeSubmitButton);
+
+        await waitFor(() => {
+          expect(counter).toBe(1);
+        });
+
+        server.close();
+      });
     });
   });
 });
