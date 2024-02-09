@@ -54,6 +54,8 @@ function handleSubmitButton() {
         </div>
         <div class="text-center">
           <button class="btn btn-primary" :disabled="isButtonDisabled || apiInProgress">
+            <span v-if="apiInProgress" role="status" class="spinner-border spinner-border-sm">
+            </span>
             Sign up
           </button>
         </div>

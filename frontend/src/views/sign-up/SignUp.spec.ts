@@ -179,6 +179,27 @@ describe('sign up', () => {
           expect(counter).toBe(1);
         });
       });
+
+      it('display spinner icon', async () => {
+        const {
+          user,
+          element: { button }
+        } = await mockSignUpFormSetup();
+
+        await user.click(button);
+
+        const loadingSpinner = screen.getByRole('status');
+        expect(loadingSpinner).toBeInTheDocument();
+      });
+
+      it('does not display spinner icon', async () => {
+        render(SignUp);
+
+        // returning null when there is no element, an not throwing exception
+        const loadingSpinner = screen.queryByRole('status');
+
+        expect(loadingSpinner).not.toBeInTheDocument();
+      });
     });
   });
 });
