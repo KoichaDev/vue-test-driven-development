@@ -13,7 +13,9 @@ const server = setupServer(
   http.post('api/v1/users', async ({ request }) => {
     requestBody = await request.json();
     counter += 1;
-    return HttpResponse.json({});
+    return HttpResponse.json({
+      message: 'User create success'
+    });
   })
 );
 
@@ -199,6 +201,21 @@ describe('sign up', () => {
         const loadingSpinner = screen.queryByRole('status');
 
         expect(loadingSpinner).not.toBeInTheDocument();
+      });
+
+      describe('when success response is received', () => {
+        it('displays message received from backend', async () => {
+          const {
+            user,
+            element: { button }
+          } = await mockSignUpFormSetup();
+
+          await user.click(button);
+
+          const textResponse = await screen.findByText('User create success');
+
+          expect(textResponse).toBeInTheDocument();
+        });
       });
     });
   });

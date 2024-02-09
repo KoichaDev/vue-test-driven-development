@@ -12,6 +12,7 @@ const signupForm = reactive({
 });
 
 const apiInProgress = ref(false);
+const successMessage = ref('');
 
 const isButtonDisabled = computed(() => {
   const { password, repeatedPassword } = signupForm;
@@ -19,10 +20,12 @@ const isButtonDisabled = computed(() => {
   return isNotValidPassword(password as ValidPassword, repeatedPassword as ValidPassword);
 });
 
-function handleSubmitButton() {
+async function handleSubmitButton() {
   const { repeatedPassword: _, ...restFormFields } = signupForm;
   apiInProgress.value = true;
-  axios.post('/api/v1/users', { ...restFormFields });
+  const response = await axios.post('/api/v1/users', { ...restFormFields });
+
+  successMessage.value = response.data.message;
 }
 </script>
 
@@ -61,6 +64,10 @@ function handleSubmitButton() {
         </div>
       </div>
     </form>
+
+    <div v-if="successMessage" class="alert alert-success">
+      {{ successMessage }}
+    </div>
   </div>
 </template>
 

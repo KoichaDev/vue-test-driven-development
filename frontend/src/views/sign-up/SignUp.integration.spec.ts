@@ -15,6 +15,7 @@ beforeEach(() => {
 describe('when user sets same value for password inputs', () => {
   describe('when user submits form', () => {
     it('sends username, email and password to the back-end', async () => {
+      axios.post.mockResolvedValue({ data: {} });
       const user = userEvent.setup();
       render(SignUp);
 
@@ -43,6 +44,8 @@ describe('when user sets same value for password inputs', () => {
 
     describe('when there is an ongoing API call', () => {
       it('does not allow clicking the button', async () => {
+        axios.post.mockResolvedValue({ data: {} });
+
         const user = userEvent.setup();
         render(SignUp);
 
