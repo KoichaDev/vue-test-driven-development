@@ -8,6 +8,8 @@ import axios from 'axios';
 
 vi.mock('axios');
 
+const mockedAxios = vi.mocked(axios, true);
+
 beforeEach(() => {
   vi.clearAllMocks();
 });
@@ -15,7 +17,7 @@ beforeEach(() => {
 describe('when user sets same value for password inputs', () => {
   describe('when user submits form', () => {
     it('sends username, email and password to the back-end', async () => {
-      axios.post.mockResolvedValue({ data: {} });
+      mockedAxios.post.mockResolvedValue({ data: {} });
       const user = userEvent.setup();
       render(SignUp);
 
@@ -44,7 +46,19 @@ describe('when user sets same value for password inputs', () => {
 
     describe('when there is an ongoing API call', () => {
       it('does not allow clicking the button', async () => {
-        axios.post.mockResolvedValue({ data: {} });
+        // ! this creates response immediately, so the spinner is not visible and will cause issue of our tests
+        // ! mockedAxios.post.mockImplementation({data: {}})
+        mockedAxios.post.mockImplementation(() => {
+          return new Promise((resolve, reject) => {
+            setTimeout(
+              () =>
+                resolve({
+                  data: {}
+                }),
+              1000
+            );
+          });
+        });
 
         const user = userEvent.setup();
         render(SignUp);
