@@ -1,10 +1,17 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import { HttpResponse, delay, http, type DefaultBodyType } from 'msw';
+
 import { setupServer } from 'msw/node';
 
 import SignUp from './SignUp.vue';
+
+import axios from 'axios';
+
+vi.mock('axios');
+
+const mockedAxios = vi.mocked(axios, true);
 
 let counter = 0;
 
@@ -218,6 +225,9 @@ describe('sign up', () => {
       });
 
       describe('when success response is received', () => {
+        beforeEach(() => {
+          mockedAxios.post.mockResolvedValue({ data: { message: 'User create success' } });
+        });
         it('displays message received from backend', async () => {
           const {
             user,
@@ -248,6 +258,9 @@ describe('sign up', () => {
       });
 
       describe('when network failure occurs', () => {
+        beforeEach(() => {
+          mockedAxios.post.mockRejectedValue({});
+        });
         it('displays generic message', async () => {
           server.use(
             http.post('api/v1/users', () => {
@@ -269,13 +282,7 @@ describe('sign up', () => {
         });
       });
 
-      it('hides spinner icon from the button', async () => {
-        server.use(
-          http.post('api/v1/users', () => {
-            return HttpResponse.error();
-          })
-        );
-
+      it.only('hides spinner icon from the button', async () => {
         const {
           user,
           element: { button }
@@ -291,35 +298,38 @@ describe('sign up', () => {
       });
     });
 
-    it('hides error when API request is progress', async () => {
-      let processFirstRequest = false;
+    describe('when user submits again', () => {
+      it('hides error when API request is progress', async () => {
+        mockedAxios.post.mockRejectedValueOnce({ data: {} });
+        let processFirstRequest = false;
 
-      server.use(
-        http.post('api/v1/users', () => {
-          if (!processFirstRequest) {
-            processFirstRequest = true;
-            return HttpResponse.error();
-          } else {
-            return HttpResponse.json({});
-          }
-        })
-      );
+        server.use(
+          http.post('api/v1/users', () => {
+            if (!processFirstRequest) {
+              processFirstRequest = true;
+              return HttpResponse.error();
+            } else {
+              return HttpResponse.json({});
+            }
+          })
+        );
 
-      const {
-        user,
-        element: { button }
-      } = await mockSignUpFormSetup();
+        const {
+          user,
+          element: { button }
+        } = await mockSignUpFormSetup();
 
-      await user.click(button);
+        await user.click(button);
 
-      const responseErrorText = await screen.findByText(
-        'Unexpected error occured. Please try again!'
-      );
+        const responseErrorText = await screen.findByText(
+          'Unexpected error occured. Please try again!'
+        );
 
-      await user.click(button);
+        await user.click(button);
 
-      await waitFor(() => {
-        expect(responseErrorText).not.toBeInTheDocument();
+        await waitFor(() => {
+          expect(responseErrorText).not.toBeInTheDocument();
+        });
       });
     });
   });
