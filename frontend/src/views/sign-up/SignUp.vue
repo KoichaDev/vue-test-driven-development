@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { reactive, computed, ref } from 'vue';
 import axios, { AxiosError } from 'axios';
+import FormInput from '@/components/common/forms/FormInput.vue';
 
 import { isNotValidPassword, type ValidPassword } from './helpers/isValidForm';
 
@@ -37,6 +38,10 @@ const isButtonDisabled = computed(() => {
 
   return isNotValidPassword(password as ValidPassword, repeatedPassword as ValidPassword);
 });
+
+const handleChangeUsername = (value: string) => {
+  signupForm.username = value
+}
 
 async function handleSubmitButton() {
   const { repeatedPassword: _, ...restFormFields } = signupForm;
@@ -76,11 +81,7 @@ async function handleSubmitButton() {
       @submit.prevent="handleSubmitButton"
     >
       <div class="card-body">
-        <div class="mb-3">
-          <label class="form-label" for="username">Username</label>
-          <input type="text" id="username" class="form-control" v-model="signupForm.username" />
-          <div>{{ apiErrors.username }}</div>
-        </div>
+        <FormInput label="Username" :help="apiErrors.username" @custom-input="handleChangeUsername"  />
         <div class="mb-3">
           <label class="form-label" for="email">E-mail</label>
           <input type="text" id="email" class="form-control" v-model="signupForm.email" />
