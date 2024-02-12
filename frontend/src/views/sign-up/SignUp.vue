@@ -1,8 +1,21 @@
 <script setup lang="ts">
 import { reactive, computed, ref } from 'vue';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 import { isNotValidPassword, type ValidPassword } from './helpers/isValidForm';
+
+type UsersAxiosError = AxiosError & {
+  response: {
+    status: 400;
+    data: {
+      validationErrors: {
+        username: string;
+        email: string;
+        message?: string;
+      };
+    };
+  };
+};
 
 const signupForm = reactive({
   username: '',
@@ -14,6 +27,10 @@ const signupForm = reactive({
 const apiInProgress = ref(false);
 const successMessage = ref('');
 const errorMessage = ref('');
+const apiErrors = reactive({
+  username: '',
+  email: ''
+});
 
 const isButtonDisabled = computed(() => {
   const { password, repeatedPassword } = signupForm;
@@ -30,8 +47,19 @@ async function handleSubmitButton() {
     const response = await axios.post('/api/v1/users', { ...restFormFields });
 
     successMessage.value = response.data.message;
-  } catch {
-    errorMessage.value = 'Unexpected error occured. Please try again!';
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      const validationErrors = error as UsersAxiosError;
+
+      if (validationErrors.response.status === 400) {
+        const dataError = validationErrors.response.data.validationErrors;
+        console.log(dataError);
+        apiErrors.username = dataError.username;
+        apiErrors.email = dataError.email;
+      } else {
+        errorMessage.value = 'Unexpected error occured. Please try again!';
+      }
+    }
   } finally {
     apiInProgress.value = false;
   }
@@ -51,6 +79,7 @@ async function handleSubmitButton() {
         <div class="mb-3">
           <label class="form-label" for="username">Username</label>
           <input type="text" id="username" class="form-control" v-model="signupForm.username" />
+          <div>{{ apiErrors.username }}</div>
         </div>
         <div class="mb-3">
           <label class="form-label" for="email">E-mail</label>

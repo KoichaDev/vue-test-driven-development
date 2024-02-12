@@ -332,5 +332,33 @@ describe('sign up', () => {
         });
       });
     });
+
+    describe('when username is invalid', () => {
+      it('displays validation error', async () => {
+        server.use(
+          http.post('api/v1/users', async () => {
+            return HttpResponse.json(
+              {
+                validationErrors: {
+                  username: 'Username cannot be null'
+                }
+              },
+              { status: 400 }
+            );
+          })
+        );
+
+        const {
+          user,
+          element: { button }
+        } = await mockSignUpFormSetup();
+
+        await user.click(button);
+
+        const responseErrorText = await screen.findByText('Username cannot be null');
+
+        expect(responseErrorText).toBeInTheDocument();
+      });
+    });
   });
 });
