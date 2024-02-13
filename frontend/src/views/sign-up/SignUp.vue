@@ -40,8 +40,8 @@ const isButtonDisabled = computed(() => {
 });
 
 const handleChangeUsername = (value: string) => {
-  signupForm.username = value
-}
+  signupForm.username = value;
+};
 
 async function handleSubmitButton() {
   const { repeatedPassword: _, ...restFormFields } = signupForm;
@@ -81,7 +81,11 @@ async function handleSubmitButton() {
       @submit.prevent="handleSubmitButton"
     >
       <div class="card-body">
-        <FormInput label="Username" :help="apiErrors.username" @custom-input="handleChangeUsername"  />
+        <FormInput
+          label="Username"
+          :errorMessage="apiErrors.username"
+          @custom-input="handleChangeUsername"
+        />
         <div class="mb-3">
           <label class="form-label" for="email">E-mail</label>
           <input type="text" id="email" class="form-control" v-model="signupForm.email" />

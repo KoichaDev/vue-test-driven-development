@@ -1,9 +1,10 @@
 <script setup lang="ts">
 type FormInputProps = {
   label: string;
-  help: string;
+  errorMessage: string;
 };
-defineProps<FormInputProps>();
+
+const { errorMessage } = defineProps<FormInputProps>();
 
 const emitCustomInput = defineEmits(['customInput']);
 
@@ -17,7 +18,13 @@ const handleCustomInput = (event: Event) => {
 <template>
   <div class="mb-3">
     <label class="form-label" :for="label">{{ label }}</label>
-    <input type="text" :id="label" class="form-control" @input="handleCustomInput" />
-    <div>{{ help }}</div>
+    <input
+      type="text"
+      :id="label"
+      class="form-control"
+      :class="{ 'is-invalid': errorMessage }"
+      @input="handleCustomInput"
+    />
+    <p class="invalid-feedback">{{ errorMessage }}</p>
   </div>
 </template>
