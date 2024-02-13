@@ -39,10 +39,6 @@ const isButtonDisabled = computed(() => {
   return isNotValidPassword(password as ValidPassword, repeatedPassword as ValidPassword);
 });
 
-const handleChangeUsername = (value: string) => {
-  signupForm.username = value;
-};
-
 async function handleSubmitButton() {
   const { repeatedPassword: _, ...restFormFields } = signupForm;
   apiInProgress.value = true;
@@ -84,12 +80,11 @@ async function handleSubmitButton() {
         <FormInput
           label="Username"
           :errorMessage="apiErrors.username"
-          @custom-input="handleChangeUsername"
+          v-model="signupForm.username"
         />
-        <div class="mb-3">
-          <label class="form-label" for="email">E-mail</label>
-          <input type="text" id="email" class="form-control" v-model="signupForm.email" />
-        </div>
+
+        <FormInput label="E-mail" :errorMessage="apiErrors.email" v-model="signupForm.email" />
+
         <div class="mb-3">
           <label class="form-label" for="password">Password</label>
           <input type="password" id="password" class="form-control" v-model="signupForm.password" />

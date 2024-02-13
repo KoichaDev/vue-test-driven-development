@@ -1,16 +1,19 @@
 <script setup lang="ts">
+import { defineProps, defineEmits } from 'vue';
+
 type FormInputProps = {
+  modelValue: string;
   label: string;
   errorMessage: string;
 };
 
-const { errorMessage } = defineProps<FormInputProps>();
+const { modelValue, label, errorMessage } = defineProps<FormInputProps>();
 
-const emitCustomInput = defineEmits(['customInput']);
+const emitCustomInput = defineEmits(['update:modelValue']);
 
 const handleCustomInput = (event: Event) => {
   if (event.target instanceof HTMLInputElement) {
-    emitCustomInput('customInput', event.target.value);
+    emitCustomInput('update:modelValue', event.target.value);
   }
 };
 </script>
@@ -23,6 +26,7 @@ const handleCustomInput = (event: Event) => {
       :id="label"
       class="form-control"
       :class="{ 'is-invalid': errorMessage }"
+      :value="modelValue"
       @input="handleCustomInput"
     />
     <p class="invalid-feedback">{{ errorMessage }}</p>
