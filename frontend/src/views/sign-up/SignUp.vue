@@ -1,119 +1,169 @@
-<script setup lang="ts">
-import { reactive, computed, ref } from 'vue';
-import axios, { AxiosError } from 'axios';
-import FormInput from '@/components/common/forms/FormInput.vue';
-
-import { isNotValidPassword, type ValidPassword } from './helpers/isValidForm';
-
-type UsersAxiosError = AxiosError & {
-  response: {
-    status: 400;
-    data: {
-      validationErrors: {
-        username: string;
-        email: string;
-        message?: string;
-      };
-    };
-  };
-};
-
-const signupForm = reactive({
-  username: '',
-  email: '',
-  password: '',
-  repeatedPassword: ''
-});
-
-const apiInProgress = ref(false);
-const successMessage = ref('');
-const errorMessage = ref('');
-const apiErrors = reactive({
-  username: '',
-  email: ''
-});
-
-const isButtonDisabled = computed(() => {
-  const { password, repeatedPassword } = signupForm;
-
-  return isNotValidPassword(password as ValidPassword, repeatedPassword as ValidPassword);
-});
-
-async function handleSubmitButton() {
-  const { repeatedPassword: _, ...restFormFields } = signupForm;
-  apiInProgress.value = true;
-  errorMessage.value = '';
-
-  try {
-    const response = await axios.post('/api/v1/users', { ...restFormFields });
-
-    successMessage.value = response.data.message;
-  } catch (error: unknown) {
-    if (error instanceof AxiosError) {
-      const validationErrors = error as UsersAxiosError;
-
-      if (validationErrors.response.status === 400) {
-        const dataError = validationErrors.response.data.validationErrors;
-        console.log(dataError);
-        apiErrors.username = dataError.username;
-        apiErrors.email = dataError.email;
-      } else {
-        errorMessage.value = 'Unexpected error occured. Please try again!';
-      }
-    }
-  } finally {
-    apiInProgress.value = false;
-  }
-}
-</script>
-
 <template>
   <div class="col-lg-6 offset-lg-3 col-md-8 offset-md-2">
-    <h1>Sign Up</h1>
-    <form
-      v-if="!successMessage"
-      class="card"
-      data-testid="form-sign-up"
-      @submit.prevent="handleSubmitButton"
-    >
+    <form class="card" @submit.prevent="submit" data-testid="form-sign-up" v-if="!successMessage">
+      <div class="card-header text-center">
+        <h1>Sign Up</h1>
+      </div>
       <div class="card-body">
-        <FormInput
+        <AppInput
+          id="username"
           label="Username"
-          :errorMessage="apiErrors.username"
-          v-model="signupForm.username"
+          :help="errors.username"
+          v-model="formState.username"
         />
-
-        <FormInput label="E-mail" :errorMessage="apiErrors.email" v-model="signupForm.email" />
-
-        <div class="mb-3">
-          <label class="form-label" for="password">Password</label>
-          <input type="password" id="password" class="form-control" v-model="signupForm.password" />
-        </div>
-        <div class="mb-3">
-          <label class="form-label" for="password-repeat">Password Repeat</label>
-          <input
-            type="password"
-            id="password-repeat"
-            class="form-control"
-            v-model="signupForm.repeatedPassword"
-          />
-        </div>
-
+        <AppInput id="email" label="E-mail" :help="errors.email" v-model="formState.email" />
+        <AppInput
+          id="password"
+          label="Password"
+          :help="errors.password"
+          v-model="formState.password"
+          type="password"
+        />
+        <AppInput
+          id="passwordRepeat"
+          label="Password Repeat"
+          :help="passwordMismatchError"
+          v-model="formState.passwordRepeat"
+          type="password"
+        />
         <div v-if="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
         <div class="text-center">
-          <button class="btn btn-primary" :disabled="isButtonDisabled || apiInProgress">
-            <span v-if="apiInProgress" role="status" class="spinner-border spinner-border-sm">
-            </span>
-            Sign up
+          <button class="btn btn-primary" :disabled="isDisabled || apiProgress">
+            <span v-if="apiProgress" role="status" class="spinner-border spinner-border-sm"></span>
+            Sign Up
           </button>
         </div>
       </div>
     </form>
-
-    <div v-if="successMessage" class="alert alert-success">
-      {{ successMessage }}
-    </div>
+    <div v-else class="alert alert-success">{{ successMessage }}</div>
   </div>
 </template>
+<script setup>
+import axios from 'axios'
+import { reactive, computed, ref, watch } from 'vue'
+import { AppInput } from '@/components'
+const formState = reactive({
+  username: '',
+  email: '',
+  password: '',
+  passwordRepeat: ''
+})
 
-<style></style>
+const apiProgress = ref(false)
+const successMessage = ref()
+const errorMessage = ref()
+const errors = ref({})
+
+const submit = async () => {
+  apiProgress.value = true
+  errorMessage.value = undefined
+  const { passwordRepeat, ...body } = formState
+  try {
+    const response = await axios.post('/api/v1/users', body)
+    successMessage.value = response.data.message
+  } catch (apiError) {
+    if (apiError.response?.status === 400) {
+      errors.value = apiError.response.data.validationErrors
+    } else {
+      errorMessage.value = 'Unexpected error occurred, please try again'
+    }
+  } finally {
+    apiProgress.value = false
+  }
+}
+
+const isDisabled = computed(() => {
+  return formState.password || formState.passwordRepeat
+    ? formState.password !== formState.passwordRepeat
+    : true
+})
+const passwordMismatchError = computed(() => {
+  return formState.password !== formState.passwordRepeat ? 'Password mismatch' : undefined
+})
+
+watch(
+  () => formState.username,
+  () => {
+    delete errors.value.username
+  }
+)
+watch(
+  () => formState.email,
+  () => {
+    delete errors.value.email
+  }
+)
+
+watch(
+  () => formState.password,
+  () => {
+    delete errors.value.password
+  }
+)
+</script>
+<!-- <script>
+import axios from 'axios'
+import { AppInput } from '@/components'
+
+export default {
+  components: {
+    AppInput
+  },
+  data() {
+    return {
+      formState: {
+        username: '',
+        email: '',
+        password: '',
+        passwordRepeat: ''
+      },
+      apiProgress: false,
+      successMessage: undefined,
+      errorMessage: undefined,
+      errors: {}
+    }
+  },
+  methods: {
+    async submit() {
+      this.apiProgress = true
+      this.errorMessage = undefined
+      const { passwordRepeat, ...body } = this.formState
+      try {
+        const response = await axios.post('/api/v1/users', body)
+        this.successMessage = response.data.message
+      } catch (apiError) {
+        if (apiError.response?.status === 400) {
+          this.errors = apiError.response.data.validationErrors
+        } else {
+          this.errorMessage = 'Unexpected error occurred, please try again'
+        }
+      } finally {
+        this.apiProgress = false
+      }
+    }
+  },
+  computed: {
+    isDisabled() {
+      return this.formState.password || this.formState.passwordRepeat
+        ? this.formState.password !== this.formState.passwordRepeat
+        : true
+    },
+    passwordMismatchError() {
+      return this.formState.password !== this.formState.passwordRepeat
+        ? 'Password mismatch'
+        : undefined
+    }
+  },
+  watch: {
+    'formState.username'() {
+      delete this.errors.username
+    },
+    'formState.email'() {
+      delete this.errors.email
+    },
+    'formState.password'() {
+      delete this.errors.password
+    }
+  }
+}
+</script> -->
